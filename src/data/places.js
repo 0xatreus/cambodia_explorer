@@ -1,4 +1,6 @@
 import { ADDITIONAL_PLACES, ADDITIONAL_PROVINCES } from './provincePlaces'
+import starterItineraries from './starterItineraries.json'
+import { PLACE_METADATA } from './placeMetadata'
 
 export const CITIES = [
   { name: 'Siem Reap', subtitle: 'Temples & easy first days', color: '#dc6b37', coords: [13.3633, 103.8564] },
@@ -21,7 +23,7 @@ export const CATEGORY_COLORS = {
   Activities: '#6c6a9e',
 }
 
-export const PLACES = [
+const PLACE_CATALOG = [
   { id: 'angkor-wat', name: 'Angkor Wat at sunrise', city: 'Siem Reap', category: 'Sights', icon: '☼', coords: [13.4125, 103.8667], cost: 37, time: 4, description: 'The iconic temple complex at its quietest, before the heat and crowds arrive.', tip: 'Go by 5:15am. Your $37 one-day Angkor pass covers the main temples too.', tag: 'First-timer favourite', tags: ['historical', 'viral'], image: 'https://images.unsplash.com/photo-1563492065599-3520f775eeed?auto=format&fit=crop&w=1200&q=80' },
   { id: 'bayon-temple', name: 'Bayon’s stone faces', city: 'Siem Reap', category: 'Sights', icon: '◉', coords: [13.4413, 103.8588], cost: 0, time: 2, description: 'A maze of calm stone faces and shaded galleries inside Angkor Thom.', tip: 'Come straight after Angkor Wat; it is included in your temple pass.', tag: 'Included with pass', tags: ['historical', 'viral'], image: 'https://images.unsplash.com/photo-1559175103-4b7655a3d22b?auto=format&fit=crop&w=1200&q=80' },
   { id: 'phare-circus', name: 'Phare Cambodian Circus', city: 'Siem Reap', category: 'Activities', icon: '✦', coords: [13.3485, 103.8484], cost: 18, time: 1.5, description: 'High-energy acrobatics and storytelling from Cambodia’s next generation of artists.', tip: 'Book the 8pm show and leave room for an easy dinner beforehand.', tag: 'Great first night', tags: ['local-go-to', 'culture'], image: 'https://images.unsplash.com/photo-1518509562904-e7ef99cdcc86?auto=format&fit=crop&w=1200&q=80' },
@@ -89,8 +91,33 @@ export const PLACES = [
   ...ADDITIONAL_PLACES,
 ]
 
-export const STARTER_ROUTES = [
-  { id: 'classic', title: 'Classic Cambodia', meta: '7 days · temples, city, coast', description: 'The no-regrets first trip.', ids: ['angkor-wat', 'bayon-temple', 'phare-circus', 'romdeng', 'central-market', 'tuol-sleng', 'kampot-pepper', 'bamboo-island'], days: 7 },
-  { id: 'siem-reap', title: 'Siem Reap weekend', meta: '3 days · go gently', description: 'A relaxed temple-first escape.', ids: ['angkor-wat', 'bayon-temple', 'phare-circus'], days: 3 },
-  { id: 'foodie', title: 'Food & stories', meta: '5 days · eat your way through', description: 'Markets, long lunches and local context.', ids: ['romdeng', 'central-market', 'tuol-sleng', 'kampot-pepper'], days: 5 },
+export const VIBE_TAGS = [
+  { id: 'must-see', label: 'Must-see' },
+  { id: 'hidden', label: 'Hidden gem' },
+  { id: 'local-go-to', label: 'Local favourite' },
+  { id: 'nature', label: 'Nature' },
+  { id: 'culture', label: 'Culture' },
+  { id: 'food', label: 'Foodie' },
+  { id: 'ethical-wildlife', label: 'Ethical wildlife' },
 ]
+
+export const DIETARY_TAGS = [
+  { id: 'vegetarian', label: 'Vegetarian' },
+  { id: 'vegan', label: 'Vegan' },
+  { id: 'halal', label: 'Halal' },
+]
+
+export const PLACES = PLACE_CATALOG.map(place => ({
+  ...place,
+  ...(PLACE_METADATA[place.id] || {}),
+  vibeTags: place.vibeTags || [...(place.tags || [])].filter(tag => VIBE_TAGS.some(vibe => vibe.id === tag)),
+  dietaryTags: place.dietaryTags || [],
+}))
+
+export const STARTER_ROUTES = starterItineraries.map(route => ({
+  ...route,
+  title: route.name,
+  meta: `${route.days} days · ${route.placeIds.length} handpicked stops`,
+  description: route.pitch,
+  ids: route.placeIds,
+}))

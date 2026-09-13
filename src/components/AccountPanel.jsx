@@ -27,6 +27,7 @@ export default function AccountPanel({ open, onClose, user, onAuthChange, items,
       const result = mode === 'login' ? await api.login({ email: form.email, password: form.password }) : await api.register(form)
       onAuthChange(result.user)
       setForm({ username: '', email: '', password: '' })
+      if (items.length) setMessage('Your current guest trip is still here. Save it below when you are ready.')
     } catch (error) {
       setMessage(error.message)
     } finally {

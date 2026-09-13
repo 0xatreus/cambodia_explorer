@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import { Clock3, DollarSign, MapPin, Plus, X } from 'lucide-react'
 import { CATEGORY_COLORS } from '../data/places'
 
-export default function SlideOver({ place, open, isAdded, onClose, onAdd }) {
+export default function SlideOver({ place, open, isAdded, onClose, onAdd, lowData }) {
   const panelRef = useRef(null)
   const lastFocusedRef = useRef(null)
 
@@ -49,8 +49,9 @@ export default function SlideOver({ place, open, isAdded, onClose, onAdd }) {
           </div>
           <button type="button" onClick={onClose} className="grid min-h-11 min-w-11 place-items-center rounded-full border border-stone-200 text-slate-700 hover:bg-stone-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700" aria-label={`Close details for ${place.name}`}><X aria-hidden="true" size={20} /></button>
         </div>
-        {place.image && <img src={place.image} alt="" className="details-place-image" />}
+        {place.image && (lowData ? <div className="details-image-deferred">Photo deferred in low-data mode</div> : <img src={place.image} alt="" className="details-place-image" />)}
         <div className="details-tags" aria-label="Place tags">{place.tags?.map(tag => <span key={tag}>{tag}</span>)}</div>
+        {place.dietaryTags?.length > 0 && <div className="details-tags" aria-label="Dietary options">{place.dietaryTags.map(tag => <span key={tag}>{tag}</span>)}</div>}
         <p id="place-description" className="mt-4 leading-7 text-slate-700">{place.description}</p>
         <dl className="mt-6 grid grid-cols-2 gap-3">
           <div className="rounded-xl bg-amber-50 p-4"><dt className="flex items-center gap-2 text-sm text-slate-600"><DollarSign aria-hidden="true" size={16} />Estimate</dt><dd className="mt-1 text-xl font-bold">${place.cost}</dd></div>
@@ -60,6 +61,7 @@ export default function SlideOver({ place, open, isAdded, onClose, onAdd }) {
           <h3 id="tip-heading" className="flex items-center gap-2 font-bold"><MapPin aria-hidden="true" size={17} /> Local tip</h3>
           <p className="mt-2 text-sm leading-6 text-slate-700">{place.tip}</p>
         </section>
+        {place.safetyNote && <section className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4" aria-labelledby="safety-heading"><h3 id="safety-heading" className="font-bold">Good to know</h3><p className="mt-2 text-sm leading-6 text-slate-700">{place.safetyNote}</p></section>}
         <button type="button" disabled={isAdded} onClick={() => onAdd(place)} className="mt-6 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 font-bold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:bg-emerald-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2"><Plus aria-hidden="true" size={19} />{isAdded ? 'Already in itinerary' : 'Add to itinerary'}</button>
       </aside>
     </div>

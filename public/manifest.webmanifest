@@ -1,0 +1,10 @@
+{
+  "name": "Cambodia Explorer",
+  "short_name": "Cambodia Explorer",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fbfaf5",
+  "theme_color": "#173f39",
+  "description": "Build a practical Cambodia trip from handpicked places.",
+  "icons": []
+}

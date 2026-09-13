@@ -43,20 +43,19 @@ function MapViewport({ activeCity }) {
   return null
 }
 
-export default function MapView({ activeCity, itineraryIds, onOpenPlace }) {
-  const markerIcons = useMemo(() => new Map(PLACES.map(place => [place.id, createCategoryIcon(place.category, itineraryIds.has(place.id))])), [itineraryIds])
+export default function MapView({ activeCity, filteredPlaces, itineraryIds, onOpenPlace, lowData }) {
+  const visiblePlaces = PLACES
+  const markerIcons = useMemo(() => new Map(visiblePlaces.map(place => [place.id, createCategoryIcon(place.category, itineraryIds.has(place.id))])), [visiblePlaces, itineraryIds])
 
   return <section className="map-shell" aria-label="Interactive map of Cambodia">
     <MapContainer className="leaflet-map" center={[12.5657, 104.991]} zoom={7} minZoom={7} maxZoom={16} maxBounds={CAMBODIA_BOUNDS} maxBoundsViscosity={1} scrollWheelZoom>
-      <TileLayer
-        attribution='&copy; OpenStreetMap contributors'
-        url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
+      {!lowData && <TileLayer attribution='&copy; OpenStreetMap contributors' url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" />}
       <MapViewport activeCity={activeCity} />
       <MarkerClusterGroup chunkedLoading showCoverageOnHover={false} spiderfyOnMaxZoom maxClusterRadius={46}>
-        {PLACES.map(place => <Marker key={place.id} position={place.coords} icon={markerIcons.get(place.id)} eventHandlers={{ click: () => onOpenPlace(place) }} title={place.name} />)}
+        {visiblePlaces.map(place => <Marker key={place.id} position={place.coords} icon={markerIcons.get(place.id)} eventHandlers={{ click: () => onOpenPlace(place) }} title={place.name} />)}
       </MarkerClusterGroup>
     </MapContainer>
+    {lowData && <p className="map-data-note">Low-data mode: map tiles deferred</p>}
     <div className="map-legend" aria-label="Map legend">
       <strong>Explore by feeling</strong>
       {Object.entries(CATEGORY_COLORS).map(([category, color]) => <span key={category}><i className="legend-marker" style={{ '--legend-color': color }} />{category}</span>)}

@@ -1,0 +1,23 @@
+[
+  {
+    "id": "classic",
+    "name": "Classic 7 Days",
+    "pitch": "The no-regrets first trip, with temples, city flavour, and a little coast.",
+    "days": 7,
+    "placeIds": ["angkor-wat", "bayon-temple", "phare-circus", "romdeng", "central-market", "tuol-sleng", "kampot-pepper", "bamboo-island"]
+  },
+  {
+    "id": "siem-reap",
+    "name": "Weekend in Siem Reap",
+    "pitch": "A gentle temple-first escape with enough space to enjoy it.",
+    "days": 3,
+    "placeIds": ["angkor-wat", "bayon-temple", "phare-circus"]
+  },
+  {
+    "id": "foodie",
+    "name": "Foodie Route",
+    "pitch": "Markets, long lunches, and stories you can taste your way through.",
+    "days": 5,
+    "placeIds": ["romdeng", "central-market", "tuol-sleng", "kampot-pepper"]
+  }
+]
