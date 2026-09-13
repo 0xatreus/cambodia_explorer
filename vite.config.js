@@ -13,5 +13,10 @@ export default defineConfig({
   },
   optimizeDeps: {
     entries: ['index.html']
+  },
+  test: {
+    environment: 'jsdom',
+    setupFiles: ['./src/test/setup.js'],
+    globals: false
   }
 })

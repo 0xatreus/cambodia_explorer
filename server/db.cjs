@@ -3,10 +3,11 @@ const path = require('node:path')
 const Database = require('better-sqlite3')
 
 const dataDirectory = path.join(__dirname, '..', 'data')
-fs.mkdirSync(dataDirectory, { recursive: true })
+const dbPath = process.env.CE_DB_PATH || path.join(dataDirectory, 'cambodia-explorer.sqlite')
+if (dbPath !== ':memory:') fs.mkdirSync(path.dirname(dbPath), { recursive: true })
 
-const db = new Database(path.join(dataDirectory, 'cambodia-explorer.sqlite'))
-db.pragma('journal_mode = WAL')
+const db = new Database(dbPath)
+if (dbPath !== ':memory:') db.pragma('journal_mode = WAL')
 db.pragma('foreign_keys = ON')
 db.exec(`
   CREATE TABLE IF NOT EXISTS users (

@@ -189,5 +189,9 @@ app.use((error, request, response, next) => {
   response.status(500).json({ error: 'Something went wrong on the server.' })
 })
 
-cleanupExpiredSessions()
-app.listen(port, host, () => console.log(`Cambodia Explorer API listening on http://${host}:${port}`))
+if (require.main === module) {
+  cleanupExpiredSessions()
+  app.listen(port, host, () => console.log(`Cambodia Explorer API listening on http://${host}:${port}`))
+}
+
+module.exports = app
