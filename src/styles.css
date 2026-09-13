@@ -153,6 +153,7 @@
 
 /* A quiet, discoverable province scroller without a scrollbar or chip styling. */
 .city-tabs-frame { position: relative; margin: 25px 0 18px; }
+.city-tabs-row { display: flex; align-items: center; gap: 12px; }
 .city-tabs-frame:before, .city-tabs-frame:after { content: ''; position: absolute; z-index: 2; top: 0; bottom: 5px; width: 34px; pointer-events: none; }
 .city-tabs-frame:before { left: 0; background: linear-gradient(90deg, #f0eee5, rgba(240,238,229,0)); }
 .city-tabs-frame:after { right: 0; background: linear-gradient(270deg, #f0eee5, rgba(240,238,229,0)); }
@@ -162,14 +163,35 @@
 .city-tabs button { flex: 0 0 auto; min-height: 28px; padding: 0 0 5px; border: 0; border-bottom: 1px solid transparent; background: transparent; color: #7b817d; font-size: 11px; font-weight: 500; white-space: nowrap; }
 .city-tabs button:hover, .city-tabs button[aria-selected="true"] { border-bottom-color: #173f39; color: #173f39; font-weight: 600; }
 .city-tabs button:focus-visible { outline-offset: 2px; }
+.feeling-trigger { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 6px; min-height: 44px; border: 1px solid #9bb3a5; border-radius: 999px; background: #fffdf8; color: #315f57; padding: 7px 13px; font-size: 11px; font-weight: 700; }
+.feeling-trigger:hover, .feeling-trigger.has-filters { border-color: #173f39; background: #173f39; color: #fffdf8; }
+.feeling-trigger span { display: grid; min-width: 19px; height: 19px; place-items: center; border-radius: 50%; background: #d55732; color: #fffdf8; font-family: var(--font-mono); font-size: 9px; }
+.feeling-panel { display: grid; gap: 13px; margin-top: 10px; padding: 14px 16px; border: 1px solid #d7ddd3; background: rgba(255,253,248,.72); }
+.feeling-panel > div { display: grid; grid-template-columns: 72px 1fr; align-items: center; gap: 12px; }
+.feeling-panel b { color: #315f57; font-family: var(--font-mono); font-size: 9px; letter-spacing: .1em; text-transform: uppercase; }
+.feeling-panel .filters { gap: 7px; padding: 0; overflow-x: auto; }
+.feeling-panel .filters button { min-height: 44px; flex: 0 0 auto; }
+.feeling-panel .vibe-filters button { border-color: #9fb9ab; color: #315f57; }
+.feeling-panel .vibe-filters button.is-active { border-color: #2e7a69; background: #2e7a69; color: #fffdf8; }
+.feeling-panel .dietary-filters button { border-color: #d5b878; color: #805f26; }
+.feeling-panel .dietary-filters button.is-active { border-color: #c88c3a; background: #c88c3a; color: #fffdf8; }
+.place-panel__controls { display: flex; align-items: center; gap: 10px; }
+.place-panel__controls button { min-height: 44px; border: 1px solid #b8c9bd; background: transparent; color: #315f57; padding: 7px 10px; font-size: 10px; font-weight: 700; }
+.place-panel__controls button:hover, .place-panel__controls button[aria-pressed="true"] { border-color: #173f39; background: #173f39; color: #fffdf8; }
 
-.explore-tools { margin: 0 0 18px; padding: 12px 16px; border: 1px solid #d9dfd4; background: rgba(255,253,248,.58); }
-.filter-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: #315f57; font-size: 12px; }
-.filter-heading button { min-height: 36px; border: 1px solid #b8c9bd; background: #fffdf8; color: #315f57; padding: 6px 10px; font-size: 11px; font-weight: 700; }
-.vibe-filters { padding: 10px 0 0; }
-.vibe-filters button { min-height: 40px; }
+.explore-tools { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 16px; margin: 0 0 18px; padding: 0 0 13px; border-bottom: 1px solid #d7ddd3; }
+.filter-heading { display: flex; align-items: center; gap: 13px; color: #315f57; font-size: 12px; white-space: nowrap; }
+.filter-heading b { font-family: var(--font-heading); font-size: 18px; font-weight: 600; }
+.filter-heading button { min-height: 36px; border: 1px solid #b8c9bd; background: transparent; color: #315f57; padding: 6px 10px; font-size: 11px; font-weight: 700; }
+.filter-heading button:hover, .filter-heading button[aria-pressed="true"] { border-color: #173f39; background: #173f39; color: #fffdf8; }
+.vibe-filters { padding: 0; }
+.vibe-filters { scrollbar-width: none; }
+.vibe-filters::-webkit-scrollbar { display: none; }
+.vibe-filters button { min-height: 36px; border-color: #d3dcd3; border-radius: 999px; background: transparent; color: #6c807a; padding: 6px 12px; font-size: 11px; }
+.vibe-filters button:hover { border-color: #8da79a; color: #315f57; }
+.vibe-filters button.is-active { border-color: #173f39; background: #173f39; color: #fffdf8; }
 .offline-banner { display: flex; align-items: center; justify-content: center; gap: 7px; min-height: 36px; padding: 7px 16px; background: #f4e8d2; color: #805026; font-size: 12px; font-weight: 600; }
-.low-data-toggle { position: fixed; z-index: 1040; left: 18px; bottom: 22px; min-height: 40px; border: 1px solid #b8c9bd; background: #fffdf8; color: #315f57; padding: 7px 11px; box-shadow: 0 5px 15px rgba(23,63,57,.12); font-size: 11px; font-weight: 700; }
+.low-data-toggle { position: fixed; z-index: 1040; left: 18px; bottom: 22px; min-height: 44px; border: 1px solid #b8c9bd; background: #fffdf8; color: #315f57; padding: 7px 11px; box-shadow: 0 5px 15px rgba(23,63,57,.12); font-size: 11px; font-weight: 700; }
 .low-data-toggle[aria-pressed="true"] { border-color: #d55732; color: #a84427; }
 .map-data-note { position: absolute; z-index: 500; top: 12px; left: 12px; margin: 0; padding: 6px 8px; background: rgba(255,253,248,.9); color: #805026; font-size: 10px; font-weight: 700; }
 .place-image { width: 95px; height: 106px; }
@@ -182,6 +204,15 @@
 .trip-actions button { min-height: 38px; }
 .swipe-browser { display: none; }
 @media (max-width: 760px) {
+	.city-tabs-row { gap: 8px; }
+	.city-tabs-row .city-tabs { min-width: 0; }
+	.feeling-trigger { padding-inline: 11px; }
+	.feeling-panel { margin-top: 8px; padding: 12px; }
+	.feeling-panel > div { display: block; }
+	.feeling-panel b { display: block; margin-bottom: 8px; }
+	.place-panel__controls { gap: 6px; }
+	.place-panel__controls > span { font-size: 10px; }
+	.place-panel__controls button { min-height: 44px; }
 	.swipe-browser { display: block; margin: 0 0 18px; padding: 14px; border: 1px solid #d9dfd4; background: #fffdf8; }
 	.swipe-browser__heading { display: flex; align-items: start; justify-content: space-between; gap: 12px; }
 	.swipe-browser__heading .eyebrow { margin-bottom: 6px; }
