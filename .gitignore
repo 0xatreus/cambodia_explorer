@@ -1,5 +1,7 @@
 node_modules/
 dist/
+chrome-debug-profile/
+/Python/
 data/*.sqlite
 data/*.sqlite-shm
 data/*.sqlite-wal
