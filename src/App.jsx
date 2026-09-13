@@ -8,6 +8,7 @@ import SwipeBrowser from './components/SwipeBrowser'
 import { CATEGORY_COLORS, CITIES, DIETARY_TAGS, PLACES, STARTER_ROUTES, VIBE_TAGS } from './data/places'
 import { CURRENCIES, formatMoney } from './data/money'
 import { api } from './lib/api'
+import { parseTrip, placesFromIds } from './lib/tripValidation'
 
 const GeneratePlanModal = lazy(() => import('./components/GeneratePlanModal'))
 
@@ -45,22 +46,22 @@ export default function App() {
     const shared = new URLSearchParams(window.location.hash.slice(1)).get('trip')
     if (shared) {
       try {
-        const trip = JSON.parse(decodeURIComponent(shared))
-        setItinerary(trip.placeIds.map(id => PLACES.find(place => place.id === id)).filter(Boolean))
-        setDays(trip.days || 5)
-        setTier(trip.tier || 'value')
-        setCurrency(trip.currency || 'USD')
-        setPartySize(trip.partySize || 1)
+        const trip = parseTrip(JSON.parse(decodeURIComponent(shared)))
+        setItinerary(placesFromIds(trip.placeIds))
+        setDays(trip.days)
+        setTier(trip.tier)
+        setCurrency(trip.currency)
+        setPartySize(trip.partySize)
         setAnnouncement('Shared trip loaded.')
       } catch { window.history.replaceState({}, '', window.location.pathname) }
     } else if (saved) {
       try {
-        const trip = JSON.parse(saved)
-        setItinerary(trip.placeIds.map(id => PLACES.find(place => place.id === id)).filter(Boolean))
-        setDays(trip.days || 5)
-        setTier(trip.tier || 'value')
-        setCurrency(trip.currency || 'USD')
-        setPartySize(trip.partySize || 1)
+        const trip = parseTrip(JSON.parse(saved))
+        setItinerary(placesFromIds(trip.placeIds))
+        setDays(trip.days)
+        setTier(trip.tier)
+        setCurrency(trip.currency)
+        setPartySize(trip.partySize)
       } catch { window.localStorage.removeItem('ce-guest-trip') }
     }
     const updateOnline = () => setIsOnline(navigator.onLine)
