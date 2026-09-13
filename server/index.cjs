@@ -1,21 +1,55 @@
 const crypto = require('node:crypto')
 const express = require('express')
+const helmet = require('helmet')
+const rateLimit = require('express-rate-limit')
 const bcrypt = require('bcryptjs')
 const db = require('./db.cjs')
 
 const app = express()
 const port = Number(process.env.PORT || 8787)
 const isProduction = process.env.NODE_ENV === 'production'
+const host = isProduction ? '0.0.0.0' : '127.0.0.1'
 const sessionMaxAge = 1000 * 60 * 60 * 24 * 30
 const cookieName = 'ce_session'
 const allowedTiers = new Set(['value', 'comfort', 'flash'])
+const DUMMY_HASH = bcrypt.hashSync('cambodia-explorer-timing-safe-placeholder', 12)
 
+app.set('trust proxy', 1)
+app.disable('x-powered-by')
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      imgSrc: ["'self'", 'data:', 'https://images.unsplash.com', 'https://*.tile.openstreetmap.org'],
+      styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+      fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+      scriptSrc: ["'self'"],
+      connectSrc: ["'self'"],
+      frameAncestors: ["'none'"],
+    },
+  },
+}))
 app.use(express.json({ limit: '32kb' }))
+
+const authRateLimit = rateLimit({ windowMs: 15 * 60 * 1000, max: 10, standardHeaders: true, legacyHeaders: false })
+
+function toSqliteDatetime(date) {
+  return date.toISOString().slice(0, 19).replace('T', ' ')
+}
+
+function cleanupExpiredSessions() {
+  db.prepare("DELETE FROM sessions WHERE expires_at <= datetime('now')").run()
+}
 
 function parseCookies(request) {
   return Object.fromEntries((request.headers.cookie || '').split(';').filter(Boolean).map(cookie => {
     const separator = cookie.indexOf('=')
-    return [cookie.slice(0, separator).trim(), decodeURIComponent(cookie.slice(separator + 1).trim())]
+    const key = cookie.slice(0, separator).trim()
+    try {
+      return [key, decodeURIComponent(cookie.slice(separator + 1).trim())]
+    } catch {
+      return [key, '']
+    }
   }))
 }
 
@@ -37,7 +71,7 @@ function publicUser(user) {
 
 function createSession(userId) {
   const token = crypto.randomBytes(32).toString('hex')
-  const expiresAt = new Date(Date.now() + sessionMaxAge).toISOString()
+  const expiresAt = toSqliteDatetime(new Date(Date.now() + sessionMaxAge))
   db.prepare('INSERT INTO sessions (user_id, token_hash, expires_at) VALUES (?, ?, ?)').run(userId, hashToken(token), expiresAt)
   return token
 }
@@ -74,10 +108,11 @@ function validateTrip(input) {
 
 app.get('/api/health', (request, response) => response.json({ ok: true }))
 
-app.post('/api/auth/register', async (request, response) => {
-  const username = typeof request.body.username === 'string' ? request.body.username.trim() : ''
-  const email = typeof request.body.email === 'string' ? request.body.email.trim().toLowerCase() : ''
-  const password = typeof request.body.password === 'string' ? request.body.password : ''
+app.post('/api/auth/register', authRateLimit, async (request, response) => {
+  const body = request.body || {}
+  const username = typeof body.username === 'string' ? body.username.trim() : ''
+  const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : ''
+  const password = typeof body.password === 'string' ? body.password : ''
   if (!/^[a-zA-Z0-9_]{3,24}$/.test(username)) return response.status(400).json({ error: 'Username must be 3-24 letters, numbers, or underscores.' })
   if (!/^\S+@\S+\.\S+$/.test(email)) return response.status(400).json({ error: 'Enter a valid email address.' })
   if (password.length < 8 || password.length > 128) return response.status(400).json({ error: 'Password must be 8-128 characters.' })
@@ -93,11 +128,14 @@ app.post('/api/auth/register', async (request, response) => {
   }
 })
 
-app.post('/api/auth/login', async (request, response) => {
-  const email = typeof request.body.email === 'string' ? request.body.email.trim().toLowerCase() : ''
-  const password = typeof request.body.password === 'string' ? request.body.password : ''
+app.post('/api/auth/login', authRateLimit, async (request, response) => {
+  const body = request.body || {}
+  const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : ''
+  const password = typeof body.password === 'string' ? body.password : ''
   const user = db.prepare('SELECT id, username, email, password_hash FROM users WHERE email = ?').get(email)
-  if (!user || !(await bcrypt.compare(password, user.password_hash))) return response.status(401).json({ error: 'Email or password is incorrect.' })
+  const passwordMatches = await bcrypt.compare(password, user ? user.password_hash : DUMMY_HASH)
+  if (!user || !passwordMatches) return response.status(401).json({ error: 'Email or password is incorrect.' })
+  cleanupExpiredSessions()
   setSessionCookie(response, createSession(user.id))
   return response.json({ user: publicUser(user) })
 })
@@ -151,4 +189,5 @@ app.use((error, request, response, next) => {
   response.status(500).json({ error: 'Something went wrong on the server.' })
 })
 
-app.listen(port, () => console.log(`Cambodia Explorer API listening on http://127.0.0.1:${port}`))
+cleanupExpiredSessions()
+app.listen(port, host, () => console.log(`Cambodia Explorer API listening on http://${host}:${port}`))

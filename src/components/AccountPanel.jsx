@@ -68,6 +68,10 @@ export default function AccountPanel({ open, onClose, user, onAuthChange, items,
 
   const signOut = async () => {
     await api.logout()
+    if ('caches' in window) {
+      const keys = await caches.keys()
+      await Promise.all(keys.map(key => caches.delete(key)))
+    }
     onAuthChange(null)
     onClose()
   }
