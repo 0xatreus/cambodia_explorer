@@ -2,7 +2,7 @@ import { LogIn, Save, Trash2, UserPlus, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { api } from '../lib/api'
 
-export default function AccountPanel({ open, onClose, user, onAuthChange, items, days, tier, onLoadTrip }) {
+export default function AccountPanel({ open, onClose, user, onAuthChange, items, days, tier, onLoadTrip, activeTripId, onActiveTripIdChange }) {
   const [mode, setMode] = useState('login')
   const [form, setForm] = useState({ username: '', email: '', password: '' })
   const [tripName, setTripName] = useState('My Cambodia trip')
@@ -44,9 +44,17 @@ export default function AccountPanel({ open, onClose, user, onAuthChange, items,
     setIsBusy(true)
     setMessage('')
     try {
-      const result = await api.createTrip({ name: tripName, days, tier, placeIds: items.map(place => place.id) })
-      setTrips(current => [result.trip, ...current])
-      setMessage('Trip saved.')
+      const body = { name: tripName, days, tier, placeIds: items.map(place => place.id) }
+      if (activeTripId) {
+        const result = await api.updateTrip(activeTripId, body)
+        setTrips(current => current.map(trip => trip.id === activeTripId ? result.trip : trip))
+        setMessage('Trip updated.')
+      } else {
+        const result = await api.createTrip(body)
+        setTrips(current => [result.trip, ...current])
+        onActiveTripIdChange(result.trip.id)
+        setMessage('Trip saved.')
+      }
     } catch (error) {
       setMessage(error.message)
     } finally {
@@ -59,6 +67,7 @@ export default function AccountPanel({ open, onClose, user, onAuthChange, items,
     try {
       await api.deleteTrip(id)
       setTrips(current => current.filter(trip => trip.id !== id))
+      if (id === activeTripId) onActiveTripIdChange(null)
     } catch (error) {
       setMessage(error.message)
     } finally {
@@ -94,7 +103,7 @@ export default function AccountPanel({ open, onClose, user, onAuthChange, items,
       </> : <>
         <div className="account-identity"><span className="account-avatar">{user.username.slice(0, 1).toUpperCase()}</span><div><b>{user.username}</b><small>{user.email}</small></div><button type="button" onClick={signOut}>Sign out</button></div>
         <form className="save-trip-form" onSubmit={saveTrip}><label>Save the current trip<input value={tripName} onChange={event => setTripName(event.target.value)} maxLength="80" required /></label><button className="account-primary" type="submit" disabled={isBusy}><Save size={16} /> Save trip</button></form>
-        <section className="saved-trips" aria-labelledby="saved-trips-title"><div className="saved-trips__heading"><h3 id="saved-trips-title">Saved trips</h3><span>{trips.length}</span></div>{trips.length ? <ul>{trips.map(trip => <li key={trip.id}><button className="saved-trip-card" onClick={() => { onLoadTrip(trip); onClose() }}><b>{trip.name}</b><small>{trip.placeIds.length} spots · {trip.days} days · {trip.tier}</small></button><button className="saved-trip-delete" onClick={() => deleteTrip(trip.id)} aria-label={`Delete ${trip.name}`}><Trash2 size={16} /></button></li>)}</ul> : <p className="account-empty">Your saved trips will show up here.</p>}</section>
+        <section className="saved-trips" aria-labelledby="saved-trips-title"><div className="saved-trips__heading"><h3 id="saved-trips-title">Saved trips</h3><span>{trips.length}</span></div>{trips.length ? <ul>{trips.map(trip => <li key={trip.id}><button className="saved-trip-card" onClick={() => { setTripName(trip.name); onLoadTrip(trip); onClose() }}><b>{trip.name}</b><small>{trip.placeIds.length} spots · {trip.days} days · {trip.tier}</small></button><button className="saved-trip-delete" onClick={() => deleteTrip(trip.id)} aria-label={`Delete ${trip.name}`}><Trash2 size={16} /></button></li>)}</ul> : <p className="account-empty">Your saved trips will show up here.</p>}</section>
       </>}
       {message && <p className="account-message" role="status">{message}</p>}
     </aside>

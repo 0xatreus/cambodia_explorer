@@ -1,8 +1,9 @@
 import { useEffect, useRef } from 'react'
 import { Clock3, DollarSign, MapPin, Plus, X } from 'lucide-react'
 import { CATEGORY_COLORS } from '../data/places'
+import { formatMoney } from '../data/money'
 
-export default function SlideOver({ place, open, isAdded, onClose, onAdd, lowData }) {
+export default function SlideOver({ place, open, isAdded, onClose, onAdd, lowData, currency }) {
   const panelRef = useRef(null)
   const lastFocusedRef = useRef(null)
 
@@ -54,7 +55,7 @@ export default function SlideOver({ place, open, isAdded, onClose, onAdd, lowDat
         {place.dietaryTags?.length > 0 && <div className="details-tags" aria-label="Dietary options">{place.dietaryTags.map(tag => <span key={tag}>{tag}</span>)}</div>}
         <p id="place-description" className="mt-4 leading-7 text-slate-700">{place.description}</p>
         <dl className="mt-6 grid grid-cols-2 gap-3">
-          <div className="rounded-xl bg-amber-50 p-4"><dt className="flex items-center gap-2 text-sm text-slate-600"><DollarSign aria-hidden="true" size={16} />Estimate</dt><dd className="mt-1 text-xl font-bold">${place.cost}</dd></div>
+          <div className="rounded-xl bg-amber-50 p-4"><dt className="flex items-center gap-2 text-sm text-slate-600"><DollarSign aria-hidden="true" size={16} />Estimate</dt><dd className="mt-1 text-xl font-bold">{formatMoney(place.cost, currency)}</dd></div>
           <div className="rounded-xl bg-emerald-50 p-4"><dt className="flex items-center gap-2 text-sm text-slate-600"><Clock3 aria-hidden="true" size={16} />Time needed</dt><dd className="mt-1 text-xl font-bold">{place.time}h</dd></div>
         </dl>
         <section className="mt-5 rounded-xl border border-stone-200 bg-stone-50 p-4" aria-labelledby="tip-heading">

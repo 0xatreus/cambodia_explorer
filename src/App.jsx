@@ -29,6 +29,7 @@ export default function App() {
   const [isAccountOpen, setIsAccountOpen] = useState(false)
   const [currency, setCurrency] = useState('USD')
   const [partySize, setPartySize] = useState(1)
+  const [activeTripId, setActiveTripId] = useState(null)
   const [lowData, setLowData] = useState(() => window.sessionStorage.getItem('ce-low-data') === 'true')
   const [isOnline, setIsOnline] = useState(() => navigator.onLine)
   const itineraryIds = useMemo(() => new Set(itinerary.map(place => place.id)), [itinerary])
@@ -47,12 +48,15 @@ export default function App() {
     if (shared) {
       try {
         const trip = parseTrip(JSON.parse(decodeURIComponent(shared)))
-        setItinerary(placesFromIds(trip.placeIds))
-        setDays(trip.days)
-        setTier(trip.tier)
-        setCurrency(trip.currency)
-        setPartySize(trip.partySize)
-        setAnnouncement('Shared trip loaded.')
+        if (!saved || window.confirm('Load shared trip and replace your current one?')) {
+          setItinerary(placesFromIds(trip.placeIds))
+          setDays(trip.days)
+          setTier(trip.tier)
+          setCurrency(trip.currency)
+          setPartySize(trip.partySize)
+          setAnnouncement('Shared trip loaded.')
+        }
+        window.history.replaceState({}, '', window.location.pathname)
       } catch { window.history.replaceState({}, '', window.location.pathname) }
     } else if (saved) {
       try {
@@ -87,18 +91,19 @@ export default function App() {
     setItinerary(items => [...items, place]); setAnnouncement(`${place.name} added to your trip.`); setIsDetailsOpen(false)
   }, [itineraryIds])
   const removePlace = useCallback(id => { const removed = itinerary.find(place => place.id === id); setItinerary(items => items.filter(place => place.id !== id)); if (removed) setAnnouncement(`${removed.name} removed from your trip.`) }, [itinerary])
-  const clearItinerary = useCallback(() => { setItinerary([]); setAnnouncement('Your trip was cleared.') }, [])
+  const clearItinerary = useCallback(() => { setItinerary([]); setActiveTripId(null); setAnnouncement('Your trip was cleared.') }, [])
   const openPlan = useCallback(() => { setIsPlanOpen(true); setAnnouncement('Your day-by-day checklist is ready.') }, [])
   const closePlan = useCallback(() => setIsPlanOpen(false), [])
   const loadTrip = useCallback(trip => {
     setItinerary(trip.placeIds.map(id => PLACES.find(place => place.id === id)).filter(Boolean))
     setDays(trip.days)
     setTier(trip.tier)
+    setActiveTripId(trip.id)
     setAnnouncement(`${trip.name} loaded.`)
     document.querySelector('#explore')?.scrollIntoView({ behavior: 'smooth' })
   }, [])
   const reorderItinerary = useCallback(items => setItinerary(items), [])
-  const applyRoute = route => { setItinerary(route.ids.map(id => PLACES.find(place => place.id === id)).filter(Boolean)); setDays(route.days); setAnnouncement(`${route.title} is ready to make your own.`); document.querySelector('#explore')?.scrollIntoView({ behavior: 'smooth' }) }
+  const applyRoute = route => { setItinerary(route.ids.map(id => PLACES.find(place => place.id === id)).filter(Boolean)); setDays(route.days); setActiveTripId(null); setAnnouncement(`${route.title} is ready to make your own.`); document.querySelector('#explore')?.scrollIntoView({ behavior: 'smooth' }) }
   const toggleVibe = vibe => setActiveVibes(current => current.includes(vibe) ? current.filter(item => item !== vibe) : [...current, vibe])
   const shareTrip = async () => {
     const payload = encodeURIComponent(JSON.stringify({ placeIds: itinerary.map(place => place.id), days, tier, currency, partySize }))
@@ -165,13 +170,13 @@ export default function App() {
     <main id="top">
       <section className="hero"><div className="hero-copy"><p className="eyebrow"><Compass size={14} /> Cambodia, made easy</p><h1>Make your <em>Cambodia</em> trip feel like yours.</h1><p className="hero-text">Pick the moments that call to you. We’ll turn them into a simple, doable trip — with a budget you can trust.</p><div className="hero-actions"><button onClick={() => document.querySelector('#routes')?.scrollIntoView({ behavior: 'smooth' })}>Start with a route <ArrowRight size={17} /></button><a href="#explore">Explore the map</a></div><div className="hero-proof"><span><b>1 min</b> to a first draft</span><span><b>{PLACES.length}</b> handpicked places</span><span><b>$</b> clear costs</span></div></div><div className="hero-art" aria-label="An illustrated view of Cambodia’s temple landscape"><div className="sun" /><div className="temple temple--back" /><div className="temple temple--front"><i /><i /><i /></div><div className="palm palm--one">✺</div><div className="palm palm--two">✺</div><p>SIEM REAP · 13.36° N</p></div></section>
       <section id="routes" className="routes-section"><div className="section-intro"><p className="eyebrow"><Sparkles size={14} /> Don’t start from zero</p><h2>Pick a starting point.</h2><p>Steal one of these, then swap anything out.</p></div><div className="route-grid">{STARTER_ROUTES.map((route, index) => <article className={`route-card route-card--${index + 1}`} key={route.id}><p>{route.meta}</p><h3>{route.title}</h3><span>{route.description}</span><button onClick={() => applyRoute(route)}>Use this route <ArrowRight size={16} /></button></article>)}</div></section>
-      <section id="explore" className="explorer"><div className="explorer-heading"><div><p className="eyebrow">The map, without the chaos</p><h2>What feels good today?</h2></div><p>Start with the places people remember — add more only when you want to.</p></div><ProvinceTabs activeCity={activeCity} onSelect={selectCity} activeVibes={activeVibes} onToggleVibe={toggleVibe} /><SwipeBrowser places={filteredPlaces} lowData={lowData} onAdd={addToItinerary} onOpen={openPlace} /><div className="explore-layout"><MapView activeCity={activeCity} filteredPlaces={filteredPlaces} itineraryIds={itineraryIds} onOpenPlace={openPlace} lowData={lowData} /><div className="place-panel"><div className="place-panel__top"><div><p>{activeCity}</p><h3>{showEverything ? 'Every place' : 'Local highlights'}</h3></div><div className="place-panel__controls"><span>{filteredPlaces.length} places</span><button type="button" onClick={() => setShowEverything(value => !value)} aria-pressed={showEverything}>{showEverything ? 'Highlights only' : 'Show everything'}</button></div></div><div className="filters">{categories.map(category => <button key={category} onClick={() => setActiveCategory(category)} className={activeCategory === category ? 'is-active' : ''} style={category !== 'All' ? { '--category-color': CATEGORY_COLORS[category] } : undefined}>{category}</button>)}</div><div className="place-list">{filteredPlaces.map(place => <article key={place.id} className="place-card" style={{ '--category-color': CATEGORY_COLORS[place.category] }}><div className={lowData ? 'place-image place-image--deferred' : 'place-image'}>{lowData ? 'Photo deferred in low-data mode' : <img src={place.image} alt="" />}</div><div className="place-card__body"><div><span>{place.category}</span><div className="place-tags" aria-label="Place tags">{place.tags?.slice(0, 3).map(tag => <em key={tag}>{tag}</em>)}</div><b>{place.name}</b><p>{place.description}</p></div><div className="place-card__foot"><small>${place.cost} <i>·</i> {place.time}h</small><button onClick={() => itineraryIds.has(place.id) ? removePlace(place.id) : addToItinerary(place)} className={itineraryIds.has(place.id) ? 'is-added' : ''} aria-label={`${itineraryIds.has(place.id) ? 'Remove' : 'Add'} ${place.name}`}>{itineraryIds.has(place.id) ? '✓ Saved' : <><Plus size={15} /> Add</>}</button></div></div></article>)}</div></div></div></section>
+      <section id="explore" className="explorer"><div className="explorer-heading"><div><p className="eyebrow">The map, without the chaos</p><h2>What feels good today?</h2></div><p>Start with the places people remember — add more only when you want to.</p></div><ProvinceTabs activeCity={activeCity} onSelect={selectCity} activeVibes={activeVibes} onToggleVibe={toggleVibe} /><SwipeBrowser places={filteredPlaces} lowData={lowData} onAdd={addToItinerary} onOpen={openPlace} currency={currency} /><div className="explore-layout"><MapView activeCity={activeCity} filteredPlaces={filteredPlaces} itineraryIds={itineraryIds} onOpenPlace={openPlace} lowData={lowData} /><div className="place-panel"><div className="place-panel__top"><div><p>{activeCity}</p><h3>{showEverything ? 'Every place' : 'Local highlights'}</h3></div><div className="place-panel__controls"><span>{filteredPlaces.length} places</span><button type="button" onClick={() => setShowEverything(value => !value)} aria-pressed={showEverything}>{showEverything ? 'Highlights only' : 'Show everything'}</button></div></div><div className="filters">{categories.map(category => <button key={category} onClick={() => setActiveCategory(category)} className={activeCategory === category ? 'is-active' : ''} style={category !== 'All' ? { '--category-color': CATEGORY_COLORS[category] } : undefined}>{category}</button>)}</div><div className="place-list">{filteredPlaces.map(place => <article key={place.id} className="place-card" style={{ '--category-color': CATEGORY_COLORS[place.category] }}><div className={lowData ? 'place-image place-image--deferred' : 'place-image'}>{lowData ? 'Photo deferred in low-data mode' : <img src={place.image} alt="" />}</div><div className="place-card__body"><div><span>{place.category}</span><div className="place-tags" aria-label="Place tags">{place.tags?.slice(0, 3).map(tag => <em key={tag}>{tag}</em>)}</div><b>{place.name}</b><p>{place.description}</p></div><div className="place-card__foot"><small>{formatMoney(place.cost, currency)} <i>·</i> {place.time}h</small><button onClick={() => itineraryIds.has(place.id) ? removePlace(place.id) : addToItinerary(place)} className={itineraryIds.has(place.id) ? 'is-added' : ''} aria-label={`${itineraryIds.has(place.id) ? 'Remove' : 'Add'} ${place.name}`}>{itineraryIds.has(place.id) ? '✓ Saved' : <><Plus size={15} /> Add</>}</button></div></div></article>)}</div></div></div></section>
       <section id="about" className="trust-row"><div><span>01</span><h3>Small by design</h3><p>We start you with the standout stops, not a giant directory.</p></div><div><span>02</span><h3>Costs, explained</h3><p>Your total includes daily basics and the experiences you choose.</p></div><div><span>03</span><h3>Made to use there</h3><p>Turn your saved list into a simple day-by-day checklist.</p></div></section>
     </main>
-    <SlideOver place={selected} open={isDetailsOpen} isAdded={selected ? itineraryIds.has(selected.id) : false} onClose={() => setIsDetailsOpen(false)} onAdd={addToItinerary} lowData={lowData} />
+    <SlideOver place={selected} open={isDetailsOpen} isAdded={selected ? itineraryIds.has(selected.id) : false} onClose={() => setIsDetailsOpen(false)} onAdd={addToItinerary} lowData={lowData} currency={currency} />
     <ItineraryBar items={itinerary} onRemove={removePlace} onClear={clearItinerary} onOpenPlan={openPlan} onShare={shareTrip} onExport={exportTrip} days={days} onChangeDays={setDays} tier={tier} onChangeTier={setTier} currency={currency} onChangeCurrency={setCurrency} partySize={partySize} onChangePartySize={setPartySize} />
-    <AccountPanel open={isAccountOpen} onClose={() => setIsAccountOpen(false)} user={user} onAuthChange={setUser} items={itinerary} days={days} tier={tier} onLoadTrip={loadTrip} />
-    {isPlanOpen && <Suspense fallback={<p className="plan-loading" role="status">Preparing your checklist...</p>}><GeneratePlanModal open items={itinerary} tripDays={days} onClose={closePlan} onReorder={reorderItinerary} /></Suspense>}
+    <AccountPanel open={isAccountOpen} onClose={() => setIsAccountOpen(false)} user={user} onAuthChange={setUser} items={itinerary} days={days} tier={tier} onLoadTrip={loadTrip} activeTripId={activeTripId} onActiveTripIdChange={setActiveTripId} />
+    {isPlanOpen && <Suspense fallback={<p className="plan-loading" role="status">Preparing your checklist...</p>}><GeneratePlanModal open items={itinerary} tripDays={days} currency={currency} onClose={closePlan} onReorder={reorderItinerary} /></Suspense>}
     <button type="button" className="low-data-toggle" onClick={() => setLowData(value => !value)} aria-pressed={lowData}>{lowData ? 'Low-data on' : 'Low-data off'}</button>
     <p className="sr-only" aria-live="polite">{announcement}</p>
   </div>

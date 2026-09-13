@@ -3,7 +3,7 @@ import { divIcon } from 'leaflet'
 import { MapContainer, Marker, TileLayer, useMap } from 'react-leaflet'
 import MarkerClusterGroup from 'react-leaflet-cluster'
 import 'leaflet/dist/leaflet.css'
-import { CATEGORY_COLORS, CITIES, PLACES } from '../data/places'
+import { CATEGORY_COLORS, CITIES } from '../data/places'
 
 const CAMBODIA_BOUNDS = [[9.85, 102.25], [14.75, 107.75]]
 const CATEGORY_GLYPHS = {
@@ -44,7 +44,7 @@ function MapViewport({ activeCity }) {
 }
 
 export default function MapView({ activeCity, filteredPlaces, itineraryIds, onOpenPlace, lowData }) {
-  const visiblePlaces = PLACES
+  const visiblePlaces = filteredPlaces
   const markerIcons = useMemo(() => new Map(visiblePlaces.map(place => [place.id, createCategoryIcon(place.category, itineraryIds.has(place.id))])), [visiblePlaces, itineraryIds])
 
   return <section className="map-shell" aria-label="Interactive map of Cambodia">

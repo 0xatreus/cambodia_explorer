@@ -4,6 +4,7 @@ import { CircleMarker, MapContainer, Polyline, TileLayer, Tooltip, useMap } from
 import { GENERAL_CHECKLIST, LOCATION_CHECKLISTS } from '../data/checklists'
 import { getTransportOptions, LOCAL_TRANSPORT } from '../data/transport'
 import { CITIES } from '../data/places'
+import { formatMoney } from '../data/money'
 
 function buildDays(items, tripDays) {
   const days = items.reduce((plan, place) => {
@@ -21,12 +22,13 @@ function buildDays(items, tripDays) {
   return days
 }
 
-export default function GeneratePlanModal({ open, items, tripDays, onClose, onReorder }) {
+export default function GeneratePlanModal({ open, items, tripDays, currency, onClose, onReorder }) {
   const panelRef = useRef(null)
   const overlayRef = useRef(null)
   const preservedScrollTopRef = useRef(null)
   const previousFocusRef = useRef(null)
-  const [checkedIds, setCheckedIds] = useState(new Set())
+  const [checkedPrepIds, setCheckedPrepIds] = useState(new Set())
+  const [checkedPlaceIds, setCheckedPlaceIds] = useState(new Set())
   const [orderedItems, setOrderedItems] = useState(items)
   const [selectedTransport, setSelectedTransport] = useState({})
   useEffect(() => setOrderedItems(items), [items])
@@ -40,12 +42,17 @@ export default function GeneratePlanModal({ open, items, tripDays, onClose, onRe
   const transportLegs = useMemo(() => locations.slice(0, -1).map((from, index) => ({ from, to: locations[index + 1], options: getTransportOptions(from, locations[index + 1]) })), [locations])
   const selectedTransportCost = transportLegs.reduce((total, leg) => {
     const option = leg.options[selectedTransport[`${leg.from}-${leg.to}`] || 0]
-    if (!option) return total
-    const values = option.cost.match(/\d+(?:\.\d+)?/g)?.map(Number) || []
-    return total + (values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0)
+    if (!option || option.costMin == null) return total
+    return total + (option.costMin + (option.costMax ?? option.costMin)) / 2
   }, 0)
 
-  const toggleChecklistItem = id => setCheckedIds(current => {
+  const toggleChecklistItem = id => setCheckedPrepIds(current => {
+    const next = new Set(current)
+    next.has(id) ? next.delete(id) : next.add(id)
+    return next
+  })
+
+  const togglePlaceItem = id => setCheckedPlaceIds(current => {
     const next = new Set(current)
     next.has(id) ? next.delete(id) : next.add(id)
     return next
@@ -108,12 +115,12 @@ export default function GeneratePlanModal({ open, items, tripDays, onClose, onRe
 
         {items.length === 0 ? <div className="mt-8 rounded-2xl border border-dashed border-stone-300 bg-white p-8 text-center"><h3 className="text-lg font-bold">No places selected yet</h3><p className="mt-2 text-slate-600">Close this window, add some places, then generate your checklist.</p></div> : <>
           <section className="prep-checklist" aria-labelledby="prep-title">
-            <div className="prep-checklist__heading"><div><p className="prep-kicker">A calmer departure</p><h3 id="prep-title">Before you go</h3></div><span>{checkedIds.size}/{GENERAL_CHECKLIST.length + locations.reduce((count, city) => count + (LOCATION_CHECKLISTS[city]?.length || 0), 0)} done</span></div>
-            <div className="prep-checklist__group"><h4>Every Cambodia trip</h4>{GENERAL_CHECKLIST.map(item => <ChecklistItem key={item.id} item={item} checked={checkedIds.has(item.id)} onToggle={toggleChecklistItem} />)}</div>
-            {locations.map(city => <div className="prep-checklist__group" key={city}><h4>{city}</h4>{(LOCATION_CHECKLISTS[city] || []).map(item => <ChecklistItem key={item.id} item={item} checked={checkedIds.has(item.id)} onToggle={toggleChecklistItem} />)}</div>)}
+            <div className="prep-checklist__heading"><div><p className="prep-kicker">A calmer departure</p><h3 id="prep-title">Before you go</h3></div><span>{checkedPrepIds.size}/{GENERAL_CHECKLIST.length + locations.reduce((count, city) => count + (LOCATION_CHECKLISTS[city]?.length || 0), 0)} done</span></div>
+            <div className="prep-checklist__group"><h4>Every Cambodia trip</h4>{GENERAL_CHECKLIST.map(item => <ChecklistItem key={item.id} item={item} checked={checkedPrepIds.has(item.id)} onToggle={toggleChecklistItem} />)}</div>
+            {locations.map(city => <div className="prep-checklist__group" key={city}><h4>{city}</h4>{(LOCATION_CHECKLISTS[city] || []).map(item => <ChecklistItem key={item.id} item={item} checked={checkedPrepIds.has(item.id)} onToggle={toggleChecklistItem} />)}</div>)}
           </section>
           <section className="transport-section" aria-labelledby="transport-title">
-            <div className="transport-section__heading"><div><p className="prep-kicker">Choose your shape</p><h3 id="transport-title">Your route</h3></div><span>${Math.round(selectedTransportCost)} est. transport</span></div>
+            <div className="transport-section__heading"><div><p className="prep-kicker">Choose your shape</p><h3 id="transport-title">Your route</h3></div><span>{formatMoney(selectedTransportCost, currency)} est. transport</span></div>
             <p className="transport-disclaimer">Your route follows the order of cities in your saved stops. Move a city up or down, then choose how you want to travel between each leg.</p>
             <div className="route-rail" aria-label="Selected city route">{locations.map((city, index) => <div className="route-stop" key={city}><div className="route-stop__node">{index + 1}</div><b>{city}</b><div className="route-stop__controls"><button type="button" onMouseDown={event => event.preventDefault()} onClick={() => moveCity(city, -1)} disabled={index === 0} aria-label={`Move ${city} earlier`}><ArrowUp size={13} /></button><button type="button" onMouseDown={event => event.preventDefault()} onClick={() => moveCity(city, 1)} disabled={index === locations.length - 1} aria-label={`Move ${city} later`}><ArrowDown size={13} /></button></div>{index < locations.length - 1 && <i className="route-stop__line" />}</div>)}</div>
             <RoutePreviewMap locations={locations} />
@@ -123,11 +130,11 @@ export default function GeneratePlanModal({ open, items, tripDays, onClose, onRe
           </section>
           <div className="mt-6 space-y-4">
             {buildDays(orderedItems, tripDays).map((day, index) => <section key={index} className="rounded-2xl border border-stone-200 bg-white p-4 sm:p-5" aria-labelledby={`day-${index + 1}`}>
-              <div className="flex flex-wrap items-center justify-between gap-2"><h3 id={`day-${index + 1}`} className="text-lg font-bold">Day {index + 1}</h3>{day.places.length > 0 && <p className="flex items-center gap-2 text-sm text-slate-600"><Clock3 aria-hidden="true" size={16} /> {day.hours}h · ${day.cost}</p>}</div>
+              <div className="flex flex-wrap items-center justify-between gap-2"><h3 id={`day-${index + 1}`} className="text-lg font-bold">Day {index + 1}</h3>{day.places.length > 0 && <p className="flex items-center gap-2 text-sm text-slate-600"><Clock3 aria-hidden="true" size={16} /> {day.hours}h · {formatMoney(day.cost, currency)}</p>}</div>
               {day.places.length === 0 ? <p className="mt-4 text-sm text-slate-600">Rest day. Leave room for weather, laundry, or a place you discover on the way.</p> : <ul className="mt-4 divide-y divide-stone-100">
                 {day.places.map((place) => {
                   const inputId = `check-${place.id}`
-                  return <li key={place.id} className="py-3 first:pt-0 last:pb-0"><label htmlFor={inputId} className="flex cursor-pointer items-start gap-3"><input id={inputId} type="checkbox" checked={checkedIds.has(place.id)} onChange={() => toggleChecklistItem(place.id)} className="mt-1 h-5 w-5 rounded border-stone-400 text-emerald-700 focus:ring-emerald-700" /><span><span className={`block font-bold ${checkedIds.has(place.id) ? 'text-slate-400 line-through' : ''}`}>{place.name}</span><span className="mt-1 block text-sm text-slate-600">{place.city} · ${place.cost} · {place.time}h</span><span className="mt-1 block text-sm italic text-slate-600">Tip: {place.tip}</span></span></label></li>
+                  return <li key={place.id} className="py-3 first:pt-0 last:pb-0"><label htmlFor={inputId} className="flex cursor-pointer items-start gap-3"><input id={inputId} type="checkbox" checked={checkedPlaceIds.has(place.id)} onChange={() => togglePlaceItem(place.id)} className="mt-1 h-5 w-5 rounded border-stone-400 text-emerald-700 focus:ring-emerald-700" /><span><span className={`block font-bold ${checkedPlaceIds.has(place.id) ? 'text-slate-400 line-through' : ''}`}>{place.name}</span><span className="mt-1 block text-sm text-slate-600">{place.city} · {formatMoney(place.cost, currency)} · {place.time}h</span><span className="mt-1 block text-sm italic text-slate-600">Tip: {place.tip}</span></span></label></li>
                 })}
               </ul>}
             </section>)}
