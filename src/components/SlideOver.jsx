@@ -46,6 +46,7 @@ export default function SlideOver({ place, open, isAdded, onClose, onAdd, lowDat
         <div className="flex items-start justify-between gap-5">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-700" style={{ color: CATEGORY_COLORS[place.category] }}>{place.category} · {place.city}</p>
+            {place.communityPick && <em className="community-badge mt-2 inline-flex">Community pick</em>}
             <h2 id="place-title" className="mt-2 text-2xl font-bold tracking-tight">{place.name}</h2>
           </div>
           <button type="button" onClick={onClose} className="grid min-h-11 min-w-11 place-items-center rounded-full border border-stone-200 text-slate-700 hover:bg-stone-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700" aria-label={`Close details for ${place.name}`}><X aria-hidden="true" size={20} /></button>
