@@ -137,7 +137,20 @@
 .map-legend span { display: flex; align-items: center; gap: 7px; }
 .legend-marker { width: 9px; height: 9px; border-radius: 50% 50% 50% 2px; background: var(--legend-color); transform: rotate(-45deg); }
 .map-attribution-note { position: absolute; z-index: 500; left: 14px; bottom: 12px; margin: 0; padding: 4px 7px; background: rgba(255,253,248,.74); color: #4F6358; font-family: var(--font-mono); font-size: 8px; letter-spacing: .04em; }
-@media (max-width: 760px) { .leaflet-map { min-height: 355px; }.map-shell > .map-legend { right: 9px; bottom: 9px; min-width: 125px; padding: 9px 10px; }.map-attribution-note { left: 8px; bottom: 8px; max-width: 150px; font-size: 7px; } }
+.map-start-card { position: absolute; z-index: 1001; isolation: isolate; top: 14px; left: 14px; display: grid; gap: 6px; width: 190px; padding: 12px 14px; border-radius: 18px; background: #F8FAF6; box-shadow: 0 6px 24px rgba(23,48,42,.14); }
+.map-start-card label { color: #4F6358; font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.map-start-card select { min-height: 36px; border: 1px solid #DCE4DA; border-radius: 12px; background: #F8FAF6; color: #17302A; padding: 0 10px; font-family: var(--font-body); font-size: 13px; font-weight: 600; }
+.map-focus-card { position: absolute; z-index: 1001; isolation: isolate; left: 14px; bottom: 14px; display: grid; gap: 6px; width: min(280px, calc(100% - 28px)); padding: 16px 18px; border-radius: 18px; background: #F8FAF6; box-shadow: 0 6px 24px rgba(23,48,42,.14); }
+.map-focus-card__close { position: absolute; top: 10px; right: 10px; display: grid; place-items: center; width: 32px; height: 32px; border: 1px solid #DCE4DA; border-radius: 50%; background: #F8FAF6; color: #4F6358; }
+.map-focus-card__close:hover { border-color: #1F4D3A; color: #17302A; }
+.map-focus-card__category { color: var(--category-color); font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.map-focus-card b { padding-right: 34px; color: #17302A; font-family: var(--font-heading); font-size: 17px; font-weight: 600; }
+.map-focus-card p { margin: 0; color: #4F6358; font-size: 12px; line-height: 1.5; }
+.map-focus-card__actions { display: flex; gap: 8px; margin-top: 4px; }
+.map-focus-card__actions button { display: inline-flex; align-items: center; justify-content: center; gap: 5px; flex: 1; min-height: 44px; border: 1px solid #1F4D3A; border-radius: 999px; background: #1F4D3A; color: #F8FAF6; font-size: 12px; font-weight: 700; }
+.map-focus-card__actions button:last-child { border-color: #DCE4DA; background: none; color: #17302A; }
+.map-focus-card__actions button.is-added { border-color: #2F6B55; background: #2F6B55; }
+@media (max-width: 760px) { .leaflet-map { min-height: 355px; }.map-shell > .map-legend { right: 9px; bottom: 9px; min-width: 125px; padding: 9px 10px; }.map-attribution-note { left: 8px; bottom: 8px; max-width: 150px; font-size: 7px; }.map-start-card { width: 150px; padding: 10px 12px; }.map-focus-card { padding: 13px 15px; } }
 
 /* Keep destination browsing present but quiet beside the map. */
 .city-tabs { gap: 16px; margin: 25px 0 18px; padding-bottom: 5px; scrollbar-width: thin; scrollbar-color: #DCE4DA transparent; }
@@ -194,7 +207,7 @@
 .offline-banner { display: flex; align-items: center; justify-content: center; gap: 7px; min-height: 36px; padding: 7px 16px; background: #f4e8d2; color: #805026; font-size: 12px; font-weight: 600; }
 .low-data-toggle { position: fixed; z-index: 1040; left: 18px; bottom: 22px; min-height: 44px; border: 1px solid #C9D3C8; background: #F8FAF6; color: #4F6358; padding: 7px 11px; box-shadow: 0 5px 15px rgba(23,63,57,.12); font-size: 11px; font-weight: 700; }
 .low-data-toggle[aria-pressed="true"] { border-color: #E39A2D; color: #2F6B55; }
-.map-data-note { position: absolute; z-index: 500; top: 12px; left: 12px; margin: 0; padding: 6px 8px; background: rgba(255,253,248,.9); color: #805026; font-size: 10px; font-weight: 700; }
+.map-data-note { position: absolute; z-index: 500; top: 104px; left: 12px; margin: 0; padding: 6px 8px; background: rgba(255,253,248,.9); color: #805026; font-size: 10px; font-weight: 700; }
 .place-image { width: 95px; height: 106px; }
 .place-image img { width: 95px; height: 106px; object-fit: cover; border-radius: 1px; background: #DCE4DA; }
 .place-image--deferred, .details-image-deferred { display: grid; place-items: center; border: 1px dashed #C9D3C8; background: #F8FAF6; color: #4F6358; text-align: center; font-size: 10px; }
