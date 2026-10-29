@@ -6,6 +6,8 @@ import { CURRENCIES } from '../data/money'
 // ESM, so these are two files sharing the same literal limits, not a single
 // shared module across the Node/browser boundary — keep them in sync by hand.
 export const ALLOWED_TIERS = new Set(['value', 'comfort', 'flash'])
+// Approved community picks (ids like community-12) are loaded from the API after startup, so they pass here and are resolved later.
+const COMMUNITY_ID = /^community-\d+$/
 const PLACES_BY_ID = new Map(PLACES.map(place => [place.id, place]))
 
 export function parseTrip(raw) {
@@ -13,7 +15,7 @@ export function parseTrip(raw) {
   const days = Number(raw.days)
   const partySize = Number(raw.partySize)
   const placeIds = Array.isArray(raw.placeIds)
-    ? [...new Set(raw.placeIds.filter(id => typeof id === 'string' && PLACES_BY_ID.has(id)))].slice(0, 100)
+    ? [...new Set(raw.placeIds.filter(id => typeof id === 'string' && (PLACES_BY_ID.has(id) || COMMUNITY_ID.test(id))))].slice(0, 100)
     : []
   return {
     placeIds,

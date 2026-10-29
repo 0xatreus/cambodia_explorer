@@ -4,7 +4,7 @@
 
 Cambodia Explorer is a map-first trip planner built for someone who's never been to Phnom Penh, doesn't know Siem Reap from Sihanoukville yet, and just wants a rough plan that doesn't cost them an afternoon of browser tabs. Tap around the map, add places that look good, watch your budget build itself, and walk away with an itinerary you'd actually use.
 
-Under the hood it's a Vite + React frontend with an Express + SQLite backend — interactive map, itinerary builder, and private saved trips, all wired together.
+Under the hood it's a Vite + React frontend with an Express + SQLite backend — interactive map, itinerary builder, community place suggestions, and private saved trips, all wired together.
 
 ## What's in the box
 
@@ -15,6 +15,7 @@ Under the hood it's a Vite + React frontend with an Express + SQLite backend —
 - **Generate Plan** — turn your picks into a day-by-day checklist with one tap
 - **Accounts & saved trips** — sign up, sign in, and keep multiple private trips tied to your account
 - **Pick up where you left off** — reload a saved trip with its stops, day count, and budget tier intact
+- **Admin dashboard (`/admin`)** — review and edit community suggestions, manage users, inspect saved trips, and view the audit log
 
 ## Getting up and running
 
@@ -37,6 +38,31 @@ The API runs quietly in the background on `http://127.0.0.1:8787`. Your trip dat
 | `npm run server` | Starts just the API |
 | `npm run dev` | Starts just the Vite frontend |
 | `npm run build` | Builds the production frontend bundle |
+| `npm run make-admin -- <email>` | Grants the `admin` role to a registered user |
+| `npm run make-admin -- <email> --revoke` | Demotes an admin back to `user` |
+
+## Database location & creating the first admin
+
+All user accounts, sessions, saved trips, place suggestions, likes, and audit logs are stored in a local SQLite file at:
+
+```text
+data/cambodia-explorer.sqlite
+```
+
+Uploaded suggestion photos are stored alongside it in `data/uploads/`. You can override the database path with `CE_DB_PATH`.
+
+There are **no default admin credentials**, and there is no way to self-promote from the client. To create the first admin:
+
+1. **Via the CLI script** (after registering an account in the app):
+   ```bash
+   npm run make-admin -- you@example.com
+   ```
+2. **Or via the `CE_ADMIN_EMAILS` environment variable** (comma-separated list of emails promoted automatically on server startup, registration, or sign-in):
+   ```bash
+   CE_ADMIN_EMAILS="you@example.com,teammate@example.com" npm run dev:full
+   ```
+
+Once promoted, an **Admin** link appears in the top header and inside the account drawer, routing to `/admin`.
 
 ## A note on accounts & security
 

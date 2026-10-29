@@ -1,0 +1,17 @@
+{
+  "categories": ["Sights", "Food", "Nature", "Activities"],
+  "vibeTags": [
+    { "id": "must-see", "label": "Must-see" },
+    { "id": "hidden", "label": "Hidden gem" },
+    { "id": "local-go-to", "label": "Local favourite" },
+    { "id": "nature", "label": "Nature" },
+    { "id": "culture", "label": "Culture" },
+    { "id": "food", "label": "Foodie" },
+    { "id": "ethical-wildlife", "label": "Ethical wildlife" }
+  ],
+  "dietaryTags": [
+    { "id": "vegetarian", "label": "Vegetarian" },
+    { "id": "vegan", "label": "Vegan" },
+    { "id": "halal", "label": "Halal" }
+  ]
+}

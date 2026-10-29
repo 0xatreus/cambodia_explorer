@@ -4,7 +4,7 @@ import { MapContainer, Marker, TileLayer, useMap, ZoomControl } from 'react-leaf
 import MarkerClusterGroup from 'react-leaflet-cluster'
 import { Plus, X } from 'lucide-react'
 import 'leaflet/dist/leaflet.css'
-import { CATEGORY_COLORS, CITIES } from '../data/places'
+import { CATEGORY_COLORS, CITIES, PROVINCES } from '../data/places'
 
 const CAMBODIA_BOUNDS = [[9.85, 102.25], [14.75, 107.75]]
 const CATEGORY_GLYPHS = {
@@ -44,6 +44,20 @@ function MapViewport({ activeCity }) {
   return null
 }
 
+function MapPlaceFlyTo({ focusedPlace }) {
+  const map = useMap()
+  const previousId = useRef(null)
+
+  useEffect(() => {
+    if (focusedPlace && focusedPlace.id !== previousId.current && focusedPlace.coords) {
+      previousId.current = focusedPlace.id
+      map.flyTo(focusedPlace.coords, 14, { animate: true, duration: 0.8 })
+    }
+  }, [focusedPlace, map])
+
+  return null
+}
+
 export default function MapView({ activeCity, onSelectCity, filteredPlaces, itineraryIds, focusedPlace, onFocusPlace, onOpenDetails, onAddPlace, onRemovePlace, lowData }) {
   const visiblePlaces = filteredPlaces
   const markerIcons = useMemo(() => new Map(visiblePlaces.map(place => [place.id, createCategoryIcon(place.category, itineraryIds.has(place.id))])), [visiblePlaces, itineraryIds])
@@ -53,6 +67,7 @@ export default function MapView({ activeCity, onSelectCity, filteredPlaces, itin
     <MapContainer className="leaflet-map" center={[12.5657, 104.991]} zoom={7} minZoom={7} maxZoom={16} maxBounds={CAMBODIA_BOUNDS} maxBoundsViscosity={1} scrollWheelZoom zoomControl={false}>
       {!lowData && <TileLayer attribution='&copy; OpenStreetMap contributors' url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" />}
       <MapViewport activeCity={activeCity} />
+      <MapPlaceFlyTo focusedPlace={focusedPlace} />
       <ZoomControl position="bottomright" />
       <MarkerClusterGroup chunkedLoading showCoverageOnHover={false} spiderfyOnMaxZoom maxClusterRadius={46}>
         {visiblePlaces.map(place => <Marker key={place.id} position={place.coords} icon={markerIcons.get(place.id)} eventHandlers={{ click: () => onFocusPlace(place) }} title={place.name} />)}
@@ -60,23 +75,26 @@ export default function MapView({ activeCity, onSelectCity, filteredPlaces, itin
     </MapContainer>
     {lowData && <p className="map-data-note">Low-data mode: map tiles deferred</p>}
     <div className="map-start-card">
-      <label htmlFor="map-start-city">Pick a starting point</label>
+      <label htmlFor="map-start-city">Province shown on map</label>
       <select id="map-start-city" value={activeCity} onChange={event => onSelectCity(event.target.value)}>
-        {CITIES.map(city => <option key={city.name} value={city.name}>{city.name}</option>)}
+        {PROVINCES.map(city => <option key={city.name} value={city.name}>{city.name}</option>)}
       </select>
     </div>
     {focusedPlace && <div className="map-focus-card">
-      <button type="button" className="map-focus-card__close" onClick={() => onFocusPlace(null)} aria-label="Close place preview"><X size={16} /></button>
-      <span className="map-focus-card__category" style={{ '--category-color': CATEGORY_COLORS[focusedPlace.category] }}>{focusedPlace.category}</span>
+      <button type="button" className="map-focus-card__close" onClick={() => onFocusPlace(null)} aria-label="Close place preview"><X size={18} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" /></button>
+      <div className="flex items-center gap-2">
+        <span className="map-focus-card__category" style={{ '--category-color': CATEGORY_COLORS[focusedPlace.category] }}>{focusedPlace.category}</span>
+        {focusedPlace.communityPick && <em className="community-badge">Community pick</em>}
+      </div>
       <b>{focusedPlace.name}</b>
       <p>{focusedPlace.description}</p>
       <div className="map-focus-card__actions">
-        <button type="button" onClick={() => isFocusedAdded ? onRemovePlace(focusedPlace.id) : onAddPlace(focusedPlace)} className={isFocusedAdded ? 'is-added' : ''}>{isFocusedAdded ? '✓ Saved' : <><Plus size={15} /> Add</>}</button>
+        <button type="button" onClick={() => isFocusedAdded ? onRemovePlace(focusedPlace.id) : onAddPlace(focusedPlace)} className={isFocusedAdded ? 'is-added' : ''}>{isFocusedAdded ? '✓ Saved' : <><Plus size={16} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" /> Add</>}</button>
         <button type="button" onClick={() => onOpenDetails(focusedPlace)}>Details</button>
       </div>
     </div>}
     <div className="map-legend" aria-label="Map legend">
-      <strong>Explore by feeling</strong>
+      <strong>Place types</strong>
       {Object.entries(CATEGORY_COLORS).map(([category, color]) => <span key={category}><i className="legend-marker" style={{ '--legend-color': color }} />{category}</span>)}
     </div>
     {!focusedPlace && <p className="map-attribution-note">Approximate locations · tap a pin to explore</p>}

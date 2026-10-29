@@ -4,6 +4,9 @@ const helmet = require('helmet')
 const rateLimit = require('express-rate-limit')
 const bcrypt = require('bcryptjs')
 const db = require('./db.cjs')
+const { createSuggestionsRouter, uploadDir } = require('./suggestions.cjs')
+const { createAdminRouter } = require('./admin.cjs')
+const { createNotificationsRouter } = require('./notifications.cjs')
 
 const app = express()
 const port = Number(process.env.PORT || 8787)
@@ -31,7 +34,13 @@ app.use(helmet({
 }))
 app.use(express.json({ limit: '32kb' }))
 
-const authRateLimit = rateLimit({ windowMs: 15 * 60 * 1000, max: 10, standardHeaders: true, legacyHeaders: false })
+const authRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many attempts. Please wait a few minutes and try again.' },
+})
 
 function toSqliteDatetime(date) {
   return date.toISOString().slice(0, 19).replace('T', ' ')
@@ -65,8 +74,20 @@ function clearSessionCookie(response) {
   response.setHeader('Set-Cookie', `${cookieName}=; HttpOnly; Path=/; SameSite=Lax; Max-Age=0${isProduction ? '; Secure' : ''}`)
 }
 
+function normalizeUserRole(user) {
+  const isAdmin = user.role === 'admin' || Boolean(user.is_admin)
+  return { ...user, role: isAdmin ? 'admin' : 'user', is_admin: isAdmin ? 1 : 0 }
+}
+
 function publicUser(user) {
-  return { id: user.id, username: user.username, email: user.email }
+  const normalized = normalizeUserRole(user)
+  return {
+    id: normalized.id,
+    username: normalized.username,
+    email: normalized.email,
+    role: normalized.role,
+    isAdmin: normalized.role === 'admin',
+  }
 }
 
 function createSession(userId) {
@@ -80,17 +101,25 @@ function getAuthenticatedUser(request) {
   const token = parseCookies(request)[cookieName]
   if (!token) return null
   const row = db.prepare(`
-    SELECT users.id, users.username, users.email
+    SELECT users.id, users.username, users.email, users.role, users.is_admin, users.disabled_at
     FROM sessions JOIN users ON users.id = sessions.user_id
-    WHERE sessions.token_hash = ? AND sessions.expires_at > datetime('now')
+    WHERE sessions.token_hash = ? AND sessions.expires_at > datetime('now') AND users.disabled_at IS NULL
   `).get(hashToken(token))
-  return row || null
+  return row ? normalizeUserRole(row) : null
 }
 
 function requireAuth(request, response, next) {
   const user = getAuthenticatedUser(request)
   if (!user) return response.status(401).json({ error: 'Please sign in to continue.' })
   request.user = user
+  return next()
+}
+
+function requireAdmin(request, response, next) {
+  const user = request.user || getAuthenticatedUser(request)
+  if (!user) return response.status(401).json({ error: 'Please sign in to continue.' })
+  request.user = user
+  if (user.role !== 'admin') return response.status(403).json({ error: 'Admin access required.' })
   return next()
 }
 
@@ -118,8 +147,10 @@ app.post('/api/auth/register', authRateLimit, async (request, response) => {
   if (password.length < 8 || password.length > 128) return response.status(400).json({ error: 'Password must be 8-128 characters.' })
   try {
     const passwordHash = await bcrypt.hash(password, 12)
-    const result = db.prepare('INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)').run(username, email, passwordHash)
-    const user = db.prepare('SELECT id, username, email FROM users WHERE id = ?').get(result.lastInsertRowid)
+    const isAdmin = db.isEnvAdminEmail(email)
+    const role = isAdmin ? 'admin' : 'user'
+    const result = db.prepare('INSERT INTO users (username, email, password_hash, role, is_admin) VALUES (?, ?, ?, ?, ?)').run(username, email, passwordHash, role, isAdmin ? 1 : 0)
+    const user = db.prepare('SELECT id, username, email, role, is_admin FROM users WHERE id = ?').get(result.lastInsertRowid)
     setSessionCookie(response, createSession(user.id))
     return response.status(201).json({ user: publicUser(user) })
   } catch (error) {
@@ -132,9 +163,15 @@ app.post('/api/auth/login', authRateLimit, async (request, response) => {
   const body = request.body || {}
   const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : ''
   const password = typeof body.password === 'string' ? body.password : ''
-  const user = db.prepare('SELECT id, username, email, password_hash FROM users WHERE email = ?').get(email)
+  const user = db.prepare('SELECT id, username, email, role, is_admin, disabled_at, password_hash FROM users WHERE email = ?').get(email)
   const passwordMatches = await bcrypt.compare(password, user ? user.password_hash : DUMMY_HASH)
   if (!user || !passwordMatches) return response.status(401).json({ error: 'Email or password is incorrect.' })
+  if (user.disabled_at) return response.status(403).json({ error: 'This account has been disabled.' })
+  if (db.isEnvAdminEmail(email) && user.role !== 'admin') {
+    db.prepare("UPDATE users SET role = 'admin', is_admin = 1 WHERE id = ?").run(user.id)
+    user.role = 'admin'
+    user.is_admin = 1
+  }
   cleanupExpiredSessions()
   setSessionCookie(response, createSession(user.id))
   return response.json({ user: publicUser(user) })
@@ -184,7 +221,14 @@ function serializeTrip(trip) {
   return { id: trip.id, name: trip.name, days: trip.days, tier: trip.tier, placeIds: JSON.parse(trip.place_ids), createdAt: trip.created_at, updatedAt: trip.updated_at }
 }
 
+app.use('/api', createSuggestionsRouter({ requireAuth, requireAdmin, getAuthenticatedUser }))
+app.use('/api', createNotificationsRouter({ requireAuth }))
+app.use('/api/admin', createAdminRouter({ requireAdmin }))
+app.use('/uploads', express.static(uploadDir, { index: false, dotfiles: 'deny', setHeaders: res => res.setHeader('X-Content-Type-Options', 'nosniff') }))
+
 app.use((error, request, response, next) => {
+  // Body-parser and similar middleware attach a 4xx status; don't report those as server faults.
+  if (error.status >= 400 && error.status < 500) return response.status(error.status).json({ error: error.type === 'entity.too.large' ? 'That upload is too large.' : 'The request could not be read.' })
   console.error(error)
   response.status(500).json({ error: 'Something went wrong on the server.' })
 })

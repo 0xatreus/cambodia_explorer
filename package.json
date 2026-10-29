@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "vite",
     "server": "node server/index.cjs",
+    "make-admin": "node server/grant-admin.cjs",
+    "admin:grant": "node server/grant-admin.cjs",
     "dev:full": "concurrently \"npm run server\" \"npm run dev\"",
     "build": "vite build",
     "preview": "vite preview"

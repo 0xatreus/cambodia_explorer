@@ -1,12 +1,13 @@
 import { ADDITIONAL_PLACES, ADDITIONAL_PROVINCES } from './provincePlaces'
 import starterItineraries from './starterItineraries.json'
 import { PLACE_METADATA } from './placeMetadata'
+import filterOptions from './filterOptions.json'
 
 export const CITIES = [
   { name: 'Siem Reap', subtitle: 'Temples & easy first days', color: '#dc6b37', coords: [13.3633, 103.8564] },
   { name: 'Phnom Penh', subtitle: 'History, markets & flavour', color: '#2e7a69', coords: [11.5564, 104.9282] },
   { name: 'Kampot', subtitle: 'River days & pepper farms', color: '#6c6a9e', coords: [10.6100, 104.1810] },
-  { name: 'Koh Rong', subtitle: 'Barefoot island reset', color: '#4385a7', coords: [10.6400, 103.2830] },
+  { name: 'Koh Rong', kind: 'island', province: 'Preah Sihanouk', subtitle: 'Barefoot island reset', color: '#4385a7', coords: [10.6400, 103.2830] },
   { name: 'Kep', subtitle: 'Crab, coast & quiet trails', color: '#c88c3a', coords: [10.4829, 104.3167] },
   { name: 'Battambang', subtitle: 'Colonial lanes & countryside', color: '#9b6548', coords: [13.0957, 103.2022] },
   { name: 'Kratie', subtitle: 'Mekong sunsets & island life', color: '#478b83', coords: [12.4881, 106.0188] },
@@ -91,24 +92,17 @@ const PLACE_CATALOG = [
   ...ADDITIONAL_PLACES,
 ]
 
-export const VIBE_TAGS = [
-  { id: 'must-see', label: 'Must-see' },
-  { id: 'hidden', label: 'Hidden gem' },
-  { id: 'local-go-to', label: 'Local favourite' },
-  { id: 'nature', label: 'Nature' },
-  { id: 'culture', label: 'Culture' },
-  { id: 'food', label: 'Foodie' },
-  { id: 'ethical-wildlife', label: 'Ethical wildlife' },
-]
+// Single source of truth for the filter options, shared with the suggestion form and server validation.
+export const VIBE_TAGS = filterOptions.vibeTags
+export const DIETARY_TAGS = filterOptions.dietaryTags
 
-export const DIETARY_TAGS = [
-  { id: 'vegetarian', label: 'Vegetarian' },
-  { id: 'vegan', label: 'Vegan' },
-  { id: 'halal', label: 'Halal' },
-]
+export const PROVINCES = CITIES.filter(city => city.kind !== 'island').slice().sort((a, b) => a.name.localeCompare(b.name))
+
+const PROVINCE_OF = Object.fromEntries(CITIES.map(city => [city.name, city.province || city.name]))
 
 export const PLACES = PLACE_CATALOG.map(place => ({
   ...place,
+  province: PROVINCE_OF[place.city] || place.city,
   ...(PLACE_METADATA[place.id] || {}),
   vibeTags: place.vibeTags || [...(place.tags || [])].filter(tag => VIBE_TAGS.some(vibe => vibe.id === tag)),
   dietaryTags: place.dietaryTags || [],

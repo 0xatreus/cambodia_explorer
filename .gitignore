@@ -9,3 +9,6 @@ data/*.sqlite-wal
 .env.*
 !.env.example
 /tmp/
+data/uploads/
+
+data/*.jsonl

@@ -1,0 +1,128 @@
+[
+    {
+        "name":  "Banteay Meanchey",
+        "lat":  13.5859,
+        "lng":  102.9737
+    },
+    {
+        "name":  "Battambang",
+        "lat":  13.0957,
+        "lng":  103.2022
+    },
+    {
+        "name":  "Kampong Cham",
+        "lat":  11.9934,
+        "lng":  105.4635
+    },
+    {
+        "name":  "Kampong Chhnang",
+        "lat":  12.25,
+        "lng":  104.6667
+    },
+    {
+        "name":  "Kampong Speu",
+        "lat":  11.4533,
+        "lng":  104.52
+    },
+    {
+        "name":  "Kampong Thom",
+        "lat":  12.25,
+        "lng":  104.88
+    },
+    {
+        "name":  "Kampot",
+        "lat":  10.61,
+        "lng":  104.181
+    },
+    {
+        "name":  "Kandal",
+        "lat":  11.4833,
+        "lng":  104.95
+    },
+    {
+        "name":  "Kep",
+        "lat":  10.4829,
+        "lng":  104.3167
+    },
+    {
+        "name":  "Koh Kong",
+        "lat":  11.6153,
+        "lng":  102.9838
+    },
+    {
+        "name":  "Kratie",
+        "lat":  12.4881,
+        "lng":  106.0188
+    },
+    {
+        "name":  "Mondulkiri",
+        "lat":  12.4558,
+        "lng":  107.1881
+    },
+    {
+        "name":  "Oddar Meanchey",
+        "lat":  14.1817,
+        "lng":  103.5176
+    },
+    {
+        "name":  "Pailin",
+        "lat":  12.8489,
+        "lng":  102.6093
+    },
+    {
+        "name":  "Phnom Penh",
+        "lat":  11.5564,
+        "lng":  104.9282
+    },
+    {
+        "name":  "Preah Sihanouk",
+        "lat":  10.625,
+        "lng":  103.523,
+        "aka":  "Sihanoukville, Koh Rong"
+    },
+    {
+        "name":  "Preah Vihear",
+        "lat":  14.39,
+        "lng":  104.68
+    },
+    {
+        "name":  "Prey Veng",
+        "lat":  11.4868,
+        "lng":  105.3253
+    },
+    {
+        "name":  "Pursat",
+        "lat":  12.5388,
+        "lng":  103.9192
+    },
+    {
+        "name":  "Ratanakiri",
+        "lat":  13.7394,
+        "lng":  106.9873
+    },
+    {
+        "name":  "Siem Reap",
+        "lat":  13.3633,
+        "lng":  103.8564
+    },
+    {
+        "name":  "Stung Treng",
+        "lat":  13.5259,
+        "lng":  105.9683
+    },
+    {
+        "name":  "Svay Rieng",
+        "lat":  11.0878,
+        "lng":  105.7993
+    },
+    {
+        "name":  "Takeo",
+        "lat":  10.9908,
+        "lng":  104.7847
+    },
+    {
+        "name":  "Tboung Khmum",
+        "lat":  11.81,
+        "lng":  105.95
+    }
+]

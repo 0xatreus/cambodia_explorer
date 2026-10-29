@@ -8,7 +8,7 @@ export const ADDITIONAL_PROVINCES = [
   { name: 'Oddar Meanchey', subtitle: 'Frontier ruins & forest roads', color: '#667b55', coords: [14.1817, 103.5176] },
   { name: 'Pailin', subtitle: 'Gem country & forest falls', color: '#5f7890', coords: [12.8489, 102.6093] },
   { name: 'Pursat', subtitle: 'Lake communities & mountain trails', color: '#4b8278', coords: [12.5388, 103.9192] },
-  { name: 'Preah Sihanouk', subtitle: 'Beaches, islands & rainforest', color: '#3d82a0', coords: [10.6250, 103.5230] },
+  { name: 'Preah Sihanouk', aka: 'Sihanoukville, Koh Rong', subtitle: 'Beaches, islands & rainforest', color: '#3d82a0', coords: [10.6250, 103.5230] },
   { name: 'Prey Veng', subtitle: 'Mekong wetlands & ancient hills', color: '#9b7158', coords: [11.4868, 105.3253] },
   { name: 'Ratanakiri', subtitle: 'Crater lakes & red-earth forests', color: '#63815a', coords: [13.7394, 106.9873] },
   { name: 'Stung Treng', subtitle: 'Four rivers & wild wetlands', color: '#4b8290', coords: [13.5259, 105.9683] },

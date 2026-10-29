@@ -1,11 +1,16 @@
+// @vitest-environment node
 import { beforeEach, describe, expect, it } from 'vitest'
+import { createRequire } from 'node:module'
 import request from 'supertest'
 
 process.env.CE_DB_PATH = ':memory:'
 process.env.NODE_ENV = 'test'
 
-const { default: app } = await import('./index.cjs')
-const { default: db } = await import('./db.cjs')
+// Load through Node's require so the app and these tests share one db.cjs instance (and one
+// in-memory database). Importing the .cjs files via ESM gave the tests a second, separate database.
+const require = createRequire(import.meta.url)
+const app = require('./index.cjs')
+const db = require('./db.cjs')
 
 function resetDb() {
   db.exec('DELETE FROM sessions; DELETE FROM trips; DELETE FROM users;')
@@ -159,6 +164,6 @@ describe('server/index.cjs', () => {
         attempts.push(await login(ip, { email: 'nobody@example.com', password: 'wrong' }))
       }
       expect(attempts.some(response => response.status === 429)).toBe(true)
-    })
+    }, 30000) // 11 sequential bcrypt (cost 12) comparisons exceed vitest's 5s default
   })
 })
